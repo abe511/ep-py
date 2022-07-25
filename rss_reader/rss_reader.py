@@ -200,11 +200,12 @@ def print_entry(entry, date, title, link, description):
         link (string): link to the post 
         description (string): the main content of the entry 
     """
+    # print(f"\nDate:\t{date}\nTitle:\t{title}\nLink:\t{link}\n\t{description}")
     print(f"\nDate:\t{date}\nTitle:\t{title}\nLink:\t{link}\n\t{description}")
     if ("Links" in entry):
         print("Links:")
         for num, url in enumerate(entry["Links"]):
-            print(f"[{num + 1}]: {url}")
+            print(f"[{num + 1}]:\t{url}")
 
 
 def display_json(channel, args):
