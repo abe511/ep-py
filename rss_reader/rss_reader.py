@@ -239,7 +239,7 @@ def main():
     Configures argparse module
         output (Namespace): a Namespace object of parsed arguments
     """
-    parser = argparse.ArgumentParser(description="Pure Python command-line RSS reader.")
+    parser = argparse.ArgumentParser(description="Python command-line RSS reader.")
     parser.add_argument("source", help="RSS URL")
     parser.add_argument("--version", action="version", version=__version__, help="Print version info")
     parser.add_argument("--json", action="store_true", help="Print result as JSON in stdout")
