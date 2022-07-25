@@ -12,7 +12,7 @@ from datetime import datetime
 from dateutil.parser import parse
 
 __version__ = "0.1.2"
-
+PATH = os.path.dirname(__file__)
 
 def get_rss_feed(url, filename):
     """
@@ -26,28 +26,30 @@ def get_rss_feed(url, filename):
     """
 
     try:
-        logging.info(f"Connecting to {url}")
+        logging.info(f"Fetching feed from {url}")
         response = requests.get(url)
     except Exception:
         if(response.status_code == 404):
             logging.error(f"No RSS found on {url}")
         else:
             logging.error("Connection error")
-        exit(1)
+        sys.exit(1)
     else:
         if(response.status_code == 200):
             logging.info("Feed contents downloaded")
             try:
-                logging.info("Writing contents to file")
-                with open(f"{os.path.dirname(__file__)}/{filename}.xml", "w") as xml_file:
+                logging.info("Caching feed")
+                if(not os.path.isdir(PATH + "cache")):
+                    os.mkdir(PATH + "cache")
+                with open(f"{PATH}cache/{filename}.xml", "w") as xml_file:
                     xml_file.write(response.text)
-            except Exception:
+            except Exception as e:
                 logging.error("Could not create an XML file")
             else:
                 logging.info("Feed contents saved")
         else:
             logging.error(f"{response.status_code} {response.reason}: {response.url}")
-            exit(1)
+            sys.exit(1)
 
 
 def read_xml_file(filename, args):
@@ -60,10 +62,10 @@ def read_xml_file(filename, args):
         get_rss_feed(args.source, filename)
     except Exception:
         logging.warning("Could not get new RSS feed")
-    if os.path.exists(f"{os.path.dirname(__file__)}/{filename}.xml"):
+    if os.path.exists(f"{PATH}cache/{filename}.xml"):
         logging.info("Reading from cache")
         try:
-            with open(f"{os.path.dirname(__file__)}/{filename}.xml", "r") as xml_file:
+            with open(f"{PATH}cache/{filename}.xml", "r") as xml_file:
                 contents = bs(xml_file, "lxml-xml")
         except Exception:
             logging.error("Could not read the XML file")
@@ -110,10 +112,9 @@ def xml_to_obj(contents, args):
             feed.append(entry)
             # feed.extend(entry)
         if(args.json):
-            # CHECK FOR EXISTING JSON FILE TO APPEND TO
             try:
                 logging.info("Creating a JSON file for the feed contents")
-                with open(f"{os.path.dirname(__file__)}/{channel['Title']}.json", "w", encoding="utf-8") as json_file:
+                with open(f"{PATH}cache/{channel['Title']}.json", "w", encoding="utf-8") as json_file:
                     json_file.write(json.dumps(feed, indent=4, ensure_ascii=False))
                     # json_file.write(json.dump(feed))
                     # json_file.write(json.dumps(feed, indent=4))
@@ -123,7 +124,7 @@ def xml_to_obj(contents, args):
         return (feed[0], feed[1:])
     else:
         logging.warning("No feed to display")
-        exit(0)
+        sys.exit(0)
 
 
 def extract_links(tag):
@@ -217,7 +218,7 @@ def display_json(channel, args):
     contents = ""
     limit = args.limit
     try:
-        with open(f"{os.path.dirname(__file__)}/{channel['Title']}.json", "r", encoding="utf-8") as json_file:
+        with open(f"{PATH}cache/{channel['Title']}.json", "r", encoding="utf-8") as json_file:
             contents = json.load(json_file)
     except Exception:
         logging.error("Could not read the JSON file")
@@ -250,8 +251,8 @@ def main():
     log_level = logging.INFO if args.verbose else logging.WARNING
     log_fmt = "%(asctime)s - %(levelname)s: %(message)s"
     logging.basicConfig(level=log_level, stream=sys.stdout, format=log_fmt, datefmt="%Y-%m-%d %H:%M:%S")
-    logging.info("Argument parsing: Done")
-    logging.info("Logger configuration: Done")
+    logging.info("Parsing arguments")
+    logging.info("Setting up logger")
     
     output_feed(args)
     logging.info("Done!")
